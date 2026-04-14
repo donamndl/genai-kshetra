@@ -1,0 +1,37 @@
+# ==========================================
+# BACKEND (Python/FastAPI)
+# ==========================================
+backend/venv/
+backend/.venv/
+backend/env/
+backend/.env
+backend/__pycache__/
+backend/**/*.py[cod]
+backend/*.log
+
+# Gen-AI / Database specific
+backend/chroma/
+backend/faiss_index/
+backend/vector_store/
+backend/storage/
+
+# ==========================================
+# FRONTEND (React/Vite/Node)
+# ==========================================
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.env
+frontend/.env.local
+frontend/.eslintcache
+frontend/npm-debug.log*
+
+# ==========================================
+# SYSTEM & IDE
+# ==========================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.bak
