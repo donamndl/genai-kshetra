@@ -1,17 +1,19 @@
-# GenAI Knowledge Platform 🧠
+# 🤖 GenAI Knowledge Platform
 
-A full-stack application that leverages Generative AI to provide a knowledge-based chat interface. Users can upload documents or query specific knowledge bases using RAG (Retrieval-Augmented Generation).
+> A production-ready RAG (Retrieval-Augmented Generation) platform to chat with your custom data.
 
-## 🚀 Tech Stack
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/Frontend-React-61DAFB?style=flat-square&logo=react)](https://reactjs.org/)
+[![LangChain](https://img.shields.io/badge/Orchestration-LangChain-121212?style=flat-square)](https://langchain.com/)
 
-- **Frontend:** React + Vite
-- **Backend:** Python, FastAPI, LangChain
-- **Database:** [Insert DB e.g., PostgreSQL / Pinecone / ChromaDB]
-- **AI Models:** Groq
+---
 
-## 📋 Features
+## 🏗️ Architecture
+The platform follows a classic decoupled architecture optimized for AI workloads:
 
-- **Document Ingestion:** Upload PDFs, TXT, or Markdown files.
-- **RAG Implementation:** Efficient retrieval of information from local/cloud vector stores.
-- **Streaming Responses:** Real-time AI chat interface.
-- **Context Awareness:** Chat history management for coherent conversations.
+1.  **Frontend (Vite/React):** Modern UI with streaming response support.
+2.  **Backend (FastAPI):** High-performance Python API handling LLM orchestration via LangChain.
+3.  **Knowledge Base:** Local Vector DB (ChromaDB/FAISS) for semantic search.
+
+```text
+User ⮕ React UI ⮕ FastAPI ⮕ LangChain ⮕ Vector DB / LLM
