@@ -27,3 +27,11 @@ graph TD
         D --> F[(Vector Store)]
         F -->|Context| C
     end
+---
+
+## ✨ Core Pillars
+
+- ⚡ Real-time RAG: Semantic search with low-latency context retrieval.
+- 📁 Document Intelligence: Support for PDF, Markdown, and TXT ingestion.
+- 💬 Conversational Memory: State-managed chat history for deep reasoning.
+- 🔌 Model Agnostic: Easily toggle between OpenAI, Anthropic, or local LLMs.
