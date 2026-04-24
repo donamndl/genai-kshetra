@@ -19,14 +19,15 @@ export default function Navbar({ onAuthClick }) {
       backdropFilter: 'blur(12px)',
     }}>
       {/* Logo */}
-      <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <span style={{ fontSize: '1.5rem' }}>🌿</span>
+      <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <img src="/logo.jpg" alt="Kshetra logo" style={{ width: '34px', height: '34px', borderRadius: '10px' }} />
         <span style={{
-          fontFamily: "'DM Serif Display', serif",
+          fontFamily: "'Inter', sans-serif",
           fontSize: '1.3rem',
+          fontWeight: '600',
           color: 'var(--accent)',
           letterSpacing: '-0.5px',
-        }}>LokālSāthi</span>
+        }}>Kshetra</span>
       </Link>
 
       {/* Right side */}
