@@ -74,20 +74,19 @@ export default function Home() {
         </div>
 
         <h1 style={{
-          fontFamily: "'DM Serif Display', serif",
+          fontFamily: "'Inter', sans-serif",
           fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
           lineHeight: 1.1, letterSpacing: '-1px',
           marginBottom: '1.25rem', maxWidth: '800px',
         }}>
-          AI that speaks <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>your</em> language,<br />
-          understands <em style={{ color: 'var(--green)', fontStyle: 'italic' }}>your</em> region
+          India's Knowledge, Reimagined Through AI
         </h1>
 
         <p style={{
           color: 'var(--muted)', fontSize: '1.1rem',
           lineHeight: 1.7, maxWidth: '560px', marginBottom: '2.5rem',
         }}>
-          LokālSāthi is a bilingual AI assistant for farmers, students, and citizens of India —
+          Kshetra is a bilingual AI assistant for farmers, students, and citizens of India —
           answering questions in Hindi, Odia, Hinglish, and more.
         </p>
 
