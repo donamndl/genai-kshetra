@@ -36,8 +36,8 @@ export default function Footer() {
           {/* About */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-              <span style={{ fontSize: '1.4rem' }}>🌿</span>
-              <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.2rem', color: 'var(--accent)' }}>LokālSāthi</span>
+              <img src="/logo.jpg" alt="Kshetra logo" style={{ width: '32px', height: '32px', borderRadius: '10px' }} />
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: '1.2rem', fontWeight: '600', color: 'var(--accent)' }}>Kshetra</span>
             </div>
             <p style={{ color: 'var(--muted)', fontSize: '0.88rem', lineHeight: 1.7, maxWidth: '320px' }}>
               A GenAI assistant built for Bharat — answering in your language, for your region.
@@ -95,7 +95,7 @@ export default function Footer() {
           flexWrap: 'wrap', gap: '0.5rem',
         }}>
           <p style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>
-            © {new Date().getFullYear()} LokālSāthi. Built for Bharat 🇮🇳
+            © {new Date().getFullYear()} Kshetra. Built for Bharat 🇮🇳
           </p>
           <p style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>
             Powered by Groq · LangChain · FastAPI · React
