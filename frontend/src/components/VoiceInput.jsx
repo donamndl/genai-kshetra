@@ -40,22 +40,33 @@ export default function VoiceInput({ onTranscript, accentColor = '#4f9cf9' }) {
     <button
       onClick={isListening ? stopListening : startListening}
       style={{
-        padding: '0.5rem',
-        borderRadius: '50%',
-        background: isListening ? '#ff4444' : accentColor,
-        color: '#fff',
-        border: 'none',
-        cursor: 'pointer',
-        width: '40px',
-        height: '40px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: '16px',
+        gap: '0.4rem',
+        padding: '0.75rem 0.95rem',
+        borderRadius: '999px',
+        background: isListening ? '#f97373' : accentColor,
+        color: '#fff',
+        border: 'none',
+        cursor: 'pointer',
+        minWidth: '52px',
+        minHeight: '52px',
+        fontSize: '0.95rem',
+        fontWeight: 700,
+        boxShadow: isListening ? '0 10px 24px rgba(249,115,115,0.25)' : '0 10px 24px rgba(79,156,249,0.2)',
+        transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease',
       }}
-      title={isListening ? 'Stop listening' : 'Start voice input'}
+      title={isListening ? 'Stop voice capture' : 'Start voice capture'}
+      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; }}
     >
-      {isListening ? '⏹️' : '🎤'}
+      <span style={{ fontSize: '1.1rem' }}>
+        {isListening ? '⏹️' : '🎙️'}
+      </span>
+      <span style={{ display: 'none' }}>
+        {isListening ? 'Stop listening' : 'Voice input'}
+      </span>
     </button>
   );
 }
