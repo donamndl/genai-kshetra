@@ -10,10 +10,11 @@ function TypingIndicator({ accentColor }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem' }}>
       <div style={{
         width: '32px', height: '32px', borderRadius: '50%',
-        background: `linear-gradient(135deg, ${accentColor}33, ${accentColor}66)`,
         border: `1px solid ${accentColor}44`,
         display: 'flex', alignItems: 'center', justifyContent: 'center'
-      }}>🌿</div>
+      }}>
+        <img src="/logo.jpg" alt="Kshetra logo" style={{ width: '18px', height: '18px' }} />
+      </div>
 
       <div style={{ display: 'flex', gap: '4px' }}>
         {[0, 1, 2].map(i => (
@@ -42,12 +43,14 @@ function Message({ message, accentColor, isUser }) {
           border: `1px solid ${accentColor}44`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           marginRight: '0.5rem'
-        }}>🌿</div>
+        }}>
+          <img src="/logo.jpg" alt="Kshetra logo" style={{ width: '18px', height: '18px', borderRadius: '50%' }} />
+        </div>
       )}
 
       <div style={{
         maxWidth: '70%',
-        padding: '0.85rem 1rem',
+        padding: '0.6rem 0.8rem',
         borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
         background: isUser ? accentColor : 'var(--card)',
         color: isUser ? '#fff' : 'var(--text)',
@@ -159,7 +162,14 @@ export default function ChatBox({
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      height: 'calc(100vh - 130px)'
+      height: '600px',
+      maxWidth: '800px',
+      margin: '2rem auto',
+      border: '1px solid var(--border)',
+      borderRadius: '12px',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+      background: 'var(--bg)',
+      overflow: 'hidden'
     }}>
 
       {/* Header */}
@@ -182,10 +192,10 @@ export default function ChatBox({
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '1rem',
+        padding: '0.5rem',
         display: 'flex',
         flexDirection: 'column',
-        gap: '1rem'
+        gap: '0.5rem'
       }}>
         {messages.length === 0 && (
           <div style={{ textAlign: 'center', marginTop: '5rem' }}>
@@ -210,7 +220,7 @@ export default function ChatBox({
       <div style={{
         display: 'flex',
         gap: '0.5rem',
-        padding: '1rem',
+        padding: '0.5rem',
         borderTop: '1px solid var(--border)'
       }}>
         <FileUpload onFileSelect={(file) => console.log(file)} />
