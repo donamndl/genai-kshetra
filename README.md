@@ -1,86 +1,69 @@
-# 🧠 Nexus AI: Knowledge-Base Intelligence Platform
+# 🧠 GenAI Knowledge Platform
 
-[![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![React](https://img.shields.io/badge/UI-React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
-[![LangChain](https://img.shields.io/badge/Orchestration-LangChain-white?style=for-the-badge&logo=chainlink)](https://python.langchain.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-
-Nexus AI is a sophisticated RAG (Retrieval-Augmented Generation) platform designed to transform static documents into interactive, context-aware intelligence.
+A full-stack RAG (Retrieval-Augmented Generation) application designed to turn your private documents into an interactive knowledge base using LLMs.
 
 ---
 
-## 🏗️ System Architecture
+## 🛠️ Tech Stack
 
-```mermaid
-graph TD
-    subgraph Client
-        A[React Frontend] -->|REST/Stream| B[FastAPI Gateway]
-    end
-
-    subgraph "AI Engine (LangChain)"
-        B --> C{Orchestrator}
-        C --> D[Embedding Model]
-        C --> E[LLM - GPT-4/Ollama]
-    end
-
-    subgraph "Knowledge Layer"
-        D --> F[(Vector Store)]
-        F -->|Context| C
-    end
----
-
-## ✨ Core Pillars
-
-- ⚡ Real-time RAG: Semantic search with low-latency context retrieval.
-- 📁 Document Intelligence: Support for PDF, Markdown, and TXT ingestion.
-- 💬 Conversational Memory: State-managed chat history for deep reasoning.
-- 🔌 Model Agnostic: Easily toggle between OpenAI, Anthropic, or local LLMs.
+- **Backend:** Python, FastAPI, LangChain
+- **Frontend:** React, Vite, TailwindCSS
+- **Embeddings:** OpenAI / HuggingFace
+- **Vector DB:** ChromaDB / FAISS
 
 ---
 
-## 🛠️ Rapid Deployment
-### 1. Backend Orchestration
-- cd backend
-- python -m venv venv
-- source venv/bin/activate  # Windows: venv\Scripts\activate
-- pip install -r requirements.txt
-- cp .env.example .env
--python main.py
+## 🏗️ System Overview
 
-### 2. Frontend Interface
+The platform operates in three simple layers:
 
-- cd frontend
-- npm install
-- npm run dev
-
-### ⚙️ Environment Configuration
-- Variable	Description	Default
-- OPENAI_API_KEY	Your AI Provider Key	Required
-- VECTOR_DB_TYPE	Type of store (Chroma/Pinecone)	chroma
-- CHUNK_SIZE	Size of text splits	1000
-- VITE_API_URL	Backend Endpoint	http://localhost:8000
+1. **The Interface (Frontend):** A React-based chat UI that handles user queries and displays real-time streaming AI responses.
+2. **The Logic (Backend):** A FastAPI server that manages document ingestion, text splitting, and AI chain orchestration.
+3. **The Brain (AI Layer):** LangChain manages the connection between the vector database (your knowledge) and the Large Language Model (the reasoning).
 
 ---
 
-## 🚀 Roadmap
+## ✨ Features
 
-- Support for Multi-modal inputs (Images/Vision)
-- Integration with Slack/Discord bots
-- Advanced User Authentication & Projects
-- Multi-Vector indexing for complex tables
-
+- **Document Ingestion:** Upload and process PDFs, Text, and Markdown.
+- **Semantic Retrieval:** Uses vector embeddings to find the most relevant context for every query.
+- **Streaming UI:** Tokens are streamed to the UI in real-time for a smooth user experience.
+- **Context Management:** Persistent chat history for follow-up questions.
 
 ---
 
-### Why this is the "Better" way:
+## 🚀 Getting Started
 
-1.  **Visual Representation:** The Mermaid diagram in the README explains your project instantly without the user reading a single word of text.
-2.  **Environment Table:** Including a table of variables makes it much easier for others to debug and set up your project.
-3.  **Glob Patterns in Gitignore:** By using `**/`, you ensure that even if you create a `testing/` folder or a `temp/` folder later, those sub-folders will also be correctly ignored.
-4.  **Badges:** They give the project immediate visual credibility (standard for high-quality open-source projects).
-5.  **Separation of Concerns:** It clearly distinguishes between the "Client," "AI Engine," and "Knowledge Layer."
+### 1. Backend Setup
 
-### Pro Tip for VS Code:
-After creating these, if you still see a bunch of green "U" markers on files that should be ignored, run this in your terminal:
-`git rm -r --cached . && git add .` 
-This forces Git to re-scan your project using the new `.gitignore` rules.
+cd backend
+python -m venv venv
+# Activate venv:
+# Source venv/bin/activate (Linux/Mac) or venv\Scripts\activate (Windows)
+pip install -r requirements.txt
+# Create your .env file in the backend folder
+python main.py
+
+### 2. Frontend Setup
+
+cd frontend
+npm install
+# Create your .env file in the frontend folder
+npm run dev
+
+---
+
+## ⚙️ Environment Configuration
+Variable	     Location	     Description
+OPENAI_API_KEY	 Backend .env	 Required for LLM and Embeddings
+DATABASE_URL	 Backend .env	 Connection string for your vector store
+VITE_API_URL	 Frontend .env	 Usually http://localhost:8000
+
+---
+
+## 📁 Project Structure
+
+- /backend: FastAPI application, LangChain logic, and vector storage.
+- /frontend: React source code, components, and assets.
+- .gitignore: Global rules for the entire repository.
+- README.md: Project documentation.
