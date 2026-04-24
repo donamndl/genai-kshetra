@@ -5,7 +5,7 @@ from routers import agriculture, education, medical, general
 
 load_dotenv()
 
-app = FastAPI(title="LokālSāthi API")
+app = FastAPI(title="Kshetra - India's Knowledge, Reimagined Through AI")
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,4 +22,4 @@ app.include_router(general.router,     prefix="/general",     tags=["General"])
 
 @app.get("/")
 def root():
-    return {"message": "LokālSāthi API is running 🌿"}
+    return {"message": "Kshetra API is running 🌿"}
