@@ -39,7 +39,7 @@ The platform operates in three simple layers:
 cd backend
 python -m venv venv
 # Activate venv:
-# Source venv/bin/activate (Linux/Mac) or venv\Scripts\activate (Windows)
+#### Source venv/bin/activate (Linux/Mac) or venv\Scripts\activate (Windows)
 pip install -r requirements.txt
 # Create your .env file in the backend folder
 python main.py
