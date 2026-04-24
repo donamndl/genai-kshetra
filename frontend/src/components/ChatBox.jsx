@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { BASE, loadHistory, saveHistory, clearHistory } from '../Api';
 import VoiceInput from './VoiceInput';
 import FileUpload from './FileUpload';
 import ReactMarkdown from 'react-markdown';
@@ -74,30 +75,47 @@ export default function ChatBox({
   const { user } = useAuth();
   const storageKey = user ? `ls-history-${user.email}-${moduleKey}` : null;
 
-  const [messages, setMessages] = useState(() => {
-    if (!storageKey) return [];
-    try {
-      return JSON.parse(localStorage.getItem(storageKey) || '[]');
-    } catch {
-      return [];
-    }
-  });
-
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
+
+  useEffect(() => {
+    async function load() {
+      if (user) {
+        try {
+          const response = await loadHistory(moduleKey);
+          setMessages(response.data.messages || []);
+        } catch {
+          setMessages([]);
+        }
+      } else if (storageKey) {
+        try {
+          setMessages(JSON.parse(localStorage.getItem(storageKey) || '[]'));
+        } catch {
+          setMessages([]);
+        }
+      }
+    }
+    load();
+  }, [user, moduleKey, storageKey]);
 
   // Scroll to bottom
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  // Save history
-  useEffect(() => {
-    if (storageKey) {
-      localStorage.setItem(storageKey, JSON.stringify(messages));
+  const saveChatHistory = async (nextMessages) => {
+    if (user) {
+      try {
+        await saveHistory(moduleKey, nextMessages);
+      } catch {
+        // silent fail, keep chat usable
+      }
+    } else if (storageKey) {
+      localStorage.setItem(storageKey, JSON.stringify(nextMessages));
     }
-  }, [messages, storageKey]);
+  };
 
   // Send message
   const send = async () => {
@@ -111,7 +129,7 @@ export default function ChatBox({
     setLoading(true);
 
     try {
-      const response = await fetch('/general/ask/stream', {
+      const response = await fetch(`${BASE}/${moduleKey}/ask/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: input, language: 'en' }),
@@ -153,8 +171,20 @@ export default function ChatBox({
     setLoading(false);
   };
 
-  const clearHistory = () => {
+  useEffect(() => {
+    if (!messages.length) return;
+    saveChatHistory(messages);
+  }, [messages, user, moduleKey, storageKey]);
+
+  const handleClearHistory = async () => {
     setMessages([]);
+    if (user) {
+      try {
+        await clearHistory(moduleKey);
+      } catch {
+        // keep UI responsive even if backend clear fails
+      }
+    }
     if (storageKey) localStorage.removeItem(storageKey);
   };
 
@@ -184,7 +214,7 @@ export default function ChatBox({
         </span>
 
         {messages.length > 0 && (
-          <button onClick={clearHistory}>Clear</button>
+          <button onClick={handleClearHistory}>Clear</button>
         )}
       </div>
 
@@ -219,9 +249,11 @@ export default function ChatBox({
       {/* Input */}
       <div style={{
         display: 'flex',
-        gap: '0.5rem',
-        padding: '0.5rem',
-        borderTop: '1px solid var(--border)'
+        gap: '0.75rem',
+        padding: '0.75rem',
+        borderTop: '1px solid var(--border)',
+        alignItems: 'center',
+        background: 'rgba(255,255,255,0.92)'
       }}>
         <FileUpload onFileSelect={(file) => console.log(file)} />
 
@@ -230,13 +262,44 @@ export default function ChatBox({
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && send()}
           placeholder={placeholder}
-          style={{ flex: 1 }}
+          style={{
+            flex: 1,
+            minHeight: '44px',
+            padding: '0.85rem 1rem',
+            borderRadius: '999px',
+            border: '1px solid var(--border)',
+            background: 'var(--bg3)',
+            color: 'var(--text)',
+            fontSize: '0.95rem',
+            outline: 'none',
+            boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.06)'
+          }}
         />
 
         <VoiceInput onTranscript={setInput} />
 
-        <button onClick={send} disabled={!input.trim() || loading}>
-          {loading ? '...' : 'Send'}
+        <button
+          onClick={send}
+          disabled={!input.trim() || loading}
+          style={{
+            minWidth: '120px',
+            padding: '0.95rem 1.2rem',
+            borderRadius: '999px',
+            border: 'none',
+            background: !input.trim() || loading ? 'var(--border)' : 'linear-gradient(135deg, #4f9cf9, #6366f1)',
+            color: !input.trim() || loading ? 'rgba(255,255,255,0.7)' : '#fff',
+            fontWeight: 700,
+            fontSize: '0.95rem',
+            cursor: !input.trim() || loading ? 'not-allowed' : 'pointer',
+            transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+            boxShadow: !input.trim() || loading ? 'none' : '0 10px 25px rgba(99,102,241,0.16)'
+          }}
+          onMouseEnter={(e) => {
+            if (!(!input.trim() || loading)) e.currentTarget.style.transform = 'translateY(-1px)';
+          }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; }}
+        >
+          {loading ? 'Sending…' : 'Send'}
         </button>
       </div>
 
