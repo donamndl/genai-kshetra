@@ -3,23 +3,69 @@ import { useAuth } from '../context/AuthContext';
 
 export default function AuthModal({ onClose }) {
   const [mode, setMode] = useState('login');
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({
+    name: '',
+    identifier: '',
+    email: '',
+    password: '',
+    mobile: '',
+    code: '',
+    newPassword: '',
+  });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const { login, signup } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const { login, signup, forgotPassword, resetPassword } = useAuth();
 
   const handle = async () => {
-    setError(''); setSuccess('');
-    if (!form.email || !form.password) return setError('Please fill all fields.');
-    if (mode === 'signup' && !form.name) return setError('Name is required.');
+    setError('');
+    setSuccess('');
 
-    const res = mode === 'login'
-      ? login(form.email, form.password)
-      : signup(form.name, form.email, form.password);
+    if (mode === 'login') {
+      if (!form.identifier || !form.password) return setError('Enter your email/mobile and password.');
+      setLoading(true);
+      const res = await login(form.identifier, form.password);
+      setLoading(false);
+      if (res?.error) return setError(res.error);
+      setSuccess('Welcome back! 👋');
+      return setTimeout(onClose, 800);
+    }
 
-    if (res.error) return setError(res.error);
-    setSuccess(mode === 'login' ? 'Welcome back! 👋' : 'Account created! 🎉');
-    setTimeout(onClose, 800);
+    if (mode === 'signup') {
+      if (!form.name) return setError('Name is required.');
+      if (!form.email && !form.mobile) return setError('Provide an email or mobile number.');
+      if (!form.password) return setError('Password is required.');
+      setLoading(true);
+      const res = await signup(form.name, form.email || undefined, form.password, form.mobile || undefined);
+      setLoading(false);
+      if (res?.error) return setError(res.error);
+      setSuccess('Account created! 🎉');
+      return setTimeout(onClose, 800);
+    }
+
+    if (mode === 'forgot') {
+      if (!form.email) return setError('Enter the registered email to receive a reset code.');
+      setLoading(true);
+      const res = await forgotPassword(form.email);
+      setLoading(false);
+      if (res?.error) return setError(res.error);
+      setSuccess(res.reset_code
+        ? `Verification code: ${res.reset_code}`
+        : 'Verification code generated.');
+      setMode('reset');
+      return;
+    }
+
+    if (mode === 'reset') {
+      if (!form.email || !form.code || !form.newPassword) return setError('Email, code, and new password are required.');
+      setLoading(true);
+      const res = await resetPassword(form.email, form.code, form.newPassword);
+      setLoading(false);
+      if (res?.error) return setError(res.error);
+      setSuccess('Password reset successfully. You can now sign in.');
+      setMode('login');
+      return;
+    }
   };
 
   const inp = {
@@ -28,6 +74,123 @@ export default function AuthModal({ onClose }) {
     background: 'var(--bg3)', color: 'var(--text)',
     fontSize: '0.9rem', outline: 'none',
   };
+
+  const renderInputs = () => {
+    if (mode === 'login') {
+      return (
+        <>
+          <input
+            style={inp}
+            placeholder="Email or mobile number"
+            value={form.identifier}
+            onChange={e => setForm(f => ({ ...f, identifier: e.target.value }))}
+          />
+          <input
+            style={inp}
+            placeholder="Password"
+            type="password"
+            value={form.password}
+            onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+            onKeyDown={e => e.key === 'Enter' && handle()}
+          />
+        </>
+      );
+    }
+
+    if (mode === 'signup') {
+      return (
+        <>
+          <input
+            style={inp}
+            placeholder="Full name"
+            value={form.name}
+            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+          />
+          <input
+            style={inp}
+            placeholder="Email address (optional)"
+            type="email"
+            value={form.email}
+            onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+          />
+          <input
+            style={inp}
+            placeholder="Mobile number (optional)"
+            value={form.mobile}
+            onChange={e => setForm(f => ({ ...f, mobile: e.target.value }))}
+          />
+          <input
+            style={inp}
+            placeholder="Password"
+            type="password"
+            value={form.password}
+            onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+            onKeyDown={e => e.key === 'Enter' && handle()}
+          />
+        </>
+      );
+    }
+
+    if (mode === 'forgot') {
+      return (
+        <input
+          style={inp}
+          placeholder="Registered email address"
+          type="email"
+          value={form.email}
+          onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+          onKeyDown={e => e.key === 'Enter' && handle()}
+        />
+      );
+    }
+
+    return (
+      <>
+        <input
+          style={inp}
+          placeholder="Registered email address"
+          type="email"
+          value={form.email}
+          onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+        />
+        <input
+          style={inp}
+          placeholder="Verification code"
+          value={form.code}
+          onChange={e => setForm(f => ({ ...f, code: e.target.value }))}
+        />
+        <input
+          style={inp}
+          placeholder="New password"
+          type="password"
+          value={form.newPassword}
+          onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))}
+          onKeyDown={e => e.key === 'Enter' && handle()}
+        />
+      </>
+    );
+  };
+
+  const title = {
+    login: 'Welcome back',
+    signup: 'Join Kshetra',
+    forgot: 'Reset password',
+    reset: 'Enter reset code',
+  }[mode];
+
+  const subtitle = {
+    login: 'Sign in to save your chat history',
+    signup: 'Create an account to save your history',
+    forgot: 'Enter your registered email to receive a reset code',
+    reset: 'Enter the code and a new password to continue',
+  }[mode];
+
+  const buttonText = {
+    login: 'Sign in',
+    signup: 'Create account',
+    forgot: 'Send reset code',
+    reset: 'Reset password',
+  }[mode];
 
   return (
     <div onClick={onClose} style={{
@@ -42,26 +205,20 @@ export default function AuthModal({ onClose }) {
         boxShadow: 'var(--shadow)',
       }}>
         <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: '1.8rem', marginBottom: '0.25rem' }}>
-          {mode === 'login' ? 'Welcome back' : 'Join Kshetra'}
+          {title}
         </h2>
         <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '1.75rem' }}>
-          {mode === 'login' ? 'Sign in to save your chat history' : 'Create an account to save your history'}
+          {subtitle}
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-          {mode === 'signup' && (
-            <input style={inp} placeholder="Full name" value={form.name}
-              onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
-          )}
-          <input style={inp} placeholder="Email address" type="email" value={form.email}
-            onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-          <input style={inp} placeholder="Password" type="password" value={form.password}
-            onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-            onKeyDown={e => e.key === 'Enter' && handle()} />
+          {renderInputs()}
           {mode === 'login' && (
             <p style={{ textAlign: 'right', marginTop: '0.25rem', fontSize: '0.8rem' }}>
-              <span onClick={() => alert('Forgot password? Contact support at support@kshetra.ai')}
-                style={{ color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}>
+              <span
+                onClick={() => { setMode('forgot'); setError(''); setSuccess(''); }}
+                style={{ color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}
+              >
                 Forgot password?
               </span>
             </p>
@@ -71,20 +228,35 @@ export default function AuthModal({ onClose }) {
         {error && <p style={{ color: '#f87171', fontSize: '0.85rem', marginTop: '0.75rem' }}>{error}</p>}
         {success && <p style={{ color: 'var(--green)', fontSize: '0.85rem', marginTop: '0.75rem' }}>{success}</p>}
 
-        <button onClick={handle} style={{
+        <button type="button" onClick={handle} disabled={loading} style={{
           width: '100%', marginTop: '1.25rem', padding: '0.85rem',
           borderRadius: '12px', border: 'none',
-          background: 'linear-gradient(135deg, var(--accent), #6366f1)',
+          background: loading ? 'var(--border)' : 'linear-gradient(135deg, var(--accent), #6366f1)',
           color: '#fff', fontWeight: 600, fontSize: '1rem',
+          cursor: loading ? 'not-allowed' : 'pointer',
         }}>
-          {mode === 'login' ? 'Sign in' : 'Create account'}
+          {loading ? 'Working...' : buttonText}
         </button>
 
         <p style={{ textAlign: 'center', marginTop: '1.25rem', fontSize: '0.85rem', color: 'var(--muted)' }}>
-          {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-          <span onClick={() => { setMode(m => m === 'login' ? 'signup' : 'login'); setError(''); }}
+          {mode === 'login' && "Don't have an account? "}
+          {mode === 'signup' && 'Already have an account? '}
+          {mode === 'forgot' && 'Remembered your password? '}
+          {mode === 'reset' && 'Back to sign in? '}
+          <span onClick={() => {
+            setMode(prev => {
+              if (prev === 'login') return 'signup';
+              if (prev === 'signup') return 'login';
+              return 'login';
+            });
+            setError('');
+            setSuccess('');
+          }}
             style={{ color: 'var(--accent)', cursor: 'pointer', fontWeight: 600 }}>
-            {mode === 'login' ? 'Sign up' : 'Sign in'}
+            {mode === 'login' && 'Sign up'}
+            {mode === 'signup' && 'Sign in'}
+            {mode === 'forgot' && 'Sign in'}
+            {mode === 'reset' && 'Sign in'}
           </span>
         </p>
 
