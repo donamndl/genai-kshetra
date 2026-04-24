@@ -41,8 +41,8 @@ export default function AuthModal({ onClose }) {
         padding: '2.5rem', width: '100%', maxWidth: '420px',
         boxShadow: 'var(--shadow)',
       }}>
-        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: '1.8rem', marginBottom: '0.25rem' }}>
-          {mode === 'login' ? 'Welcome back' : 'Join LokālSāthi'}
+        <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: '1.8rem', marginBottom: '0.25rem' }}>
+          {mode === 'login' ? 'Welcome back' : 'Join Kshetra'}
         </h2>
         <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '1.75rem' }}>
           {mode === 'login' ? 'Sign in to save your chat history' : 'Create an account to save your history'}
@@ -58,6 +58,14 @@ export default function AuthModal({ onClose }) {
           <input style={inp} placeholder="Password" type="password" value={form.password}
             onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
             onKeyDown={e => e.key === 'Enter' && handle()} />
+          {mode === 'login' && (
+            <p style={{ textAlign: 'right', marginTop: '0.25rem', fontSize: '0.8rem' }}>
+              <span onClick={() => alert('Forgot password? Contact support at support@kshetra.ai')}
+                style={{ color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}>
+                Forgot password?
+              </span>
+            </p>
+          )}
         </div>
 
         {error && <p style={{ color: '#f87171', fontSize: '0.85rem', marginTop: '0.75rem' }}>{error}</p>}
