@@ -1,41 +1,77 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState } from 'react';
+import { authLogin, authSignup, authForgotPassword, authResetPassword } from '../Api';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('ls-user');
+    const saved = localStorage.getItem('kshetra-user');
     return saved ? JSON.parse(saved) : null;
   });
 
-  const signup = (name, email, password) => {
-    const users = JSON.parse(localStorage.getItem('ls-users') || '[]');
-    if (users.find(u => u.email === email)) return { error: 'Email already registered.' };
-    const newUser = { name, email, password, createdAt: Date.now() };
-    users.push(newUser);
-    localStorage.setItem('ls-users', JSON.stringify(users));
-    const { password: _, ...safe } = newUser;
-    setUser(safe);
-    localStorage.setItem('ls-user', JSON.stringify(safe));
-    return { success: true };
+  const [token, setToken] = useState(() => localStorage.getItem('kshetra-token') || null);
+
+  const saveSession = (userData, accessToken) => {
+    localStorage.setItem('kshetra-user', JSON.stringify(userData));
+    localStorage.setItem('kshetra-token', accessToken);
+    setUser(userData);
+    setToken(accessToken);
   };
 
-  const login = (email, password) => {
-    const users = JSON.parse(localStorage.getItem('ls-users') || '[]');
-    const found = users.find(u => u.email === email && u.password === password);
-    if (!found) return { error: 'Invalid email or password.' };
-    const { password: _, ...safe } = found;
-    setUser(safe);
-    localStorage.setItem('ls-user', JSON.stringify(safe));
-    return { success: true };
+  const signup = async (name, email, password, mobile) => {
+    try {
+      const response = await authSignup(name, email || undefined, password, mobile || undefined);
+      saveSession(response.data.user, response.data.access_token);
+      return { success: true };
+    } catch (error) {
+      return { error: error.response?.data?.detail || 'Signup failed.' };
+    }
+  };
+
+  const login = async (identifier, password) => {
+    try {
+      const response = await authLogin(identifier, password);
+      saveSession(response.data.user, response.data.access_token);
+      return { success: true };
+    } catch (error) {
+      return { error: error.response?.data?.detail || 'Invalid email/mobile or password.' };
+    }
+  };
+
+  const forgotPassword = async (email) => {
+    try {
+      const response = await authForgotPassword(email);
+      return {
+        success: true,
+        message: response.data.message,
+        reset_code: response.data.reset_code,
+      };
+    } catch (error) {
+      return { error: error.response?.data?.detail || 'Unable to generate reset code.' };
+    }
+  };
+
+  const resetPassword = async (email, code, newPassword) => {
+    try {
+      const response = await authResetPassword(email, code, newPassword);
+      return { success: true, message: response.data.message };
+    } catch (error) {
+      return { error: error.response?.data?.detail || 'Unable to reset password.' };
+    }
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('ls-user');
+    setToken(null);
+    localStorage.removeItem('kshetra-user');
+    localStorage.removeItem('kshetra-token');
   };
 
-  return <AuthContext.Provider value={{ user, signup, login, logout }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, token, signup, login, logout, forgotPassword, resetPassword }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export const useAuth = () => useContext(AuthContext);
