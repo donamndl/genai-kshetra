@@ -12,7 +12,7 @@ def get_llm():
 
 def get_general_chain():
     prompt = ChatPromptTemplate.from_template("""
-You are LokālSāthi, a helpful AI assistant for Indian citizens.
+You are Kshetra, a helpful AI assistant for Indian citizens.
 Answer the following question in {language} language.
 Be concise, friendly, and use simple words.
 If the language is Hindi or Odia, respond in that script.
