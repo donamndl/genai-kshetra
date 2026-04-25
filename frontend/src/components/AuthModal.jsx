@@ -15,6 +15,7 @@ export default function AuthModal({ onClose }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login, signup, forgotPassword, resetPassword } = useAuth();
 
   const handle = async () => {
@@ -28,7 +29,10 @@ export default function AuthModal({ onClose }) {
       setLoading(false);
       if (res?.error) return setError(res.error);
       setSuccess('Welcome back! 👋');
-      return setTimeout(onClose, 800);
+      return setTimeout(() => {
+        onClose();
+        window.location.reload();
+      }, 800);
     }
 
     if (mode === 'signup') {
@@ -40,7 +44,10 @@ export default function AuthModal({ onClose }) {
       setLoading(false);
       if (res?.error) return setError(res.error);
       setSuccess('Account created! 🎉');
-      return setTimeout(onClose, 800);
+      return setTimeout(() => {
+        onClose();
+        window.location.reload();
+      }, 800);
     }
 
     if (mode === 'forgot') {
@@ -84,15 +91,30 @@ export default function AuthModal({ onClose }) {
             placeholder="Email or mobile number"
             value={form.identifier}
             onChange={e => setForm(f => ({ ...f, identifier: e.target.value }))}
+            disabled={loading}
           />
-          <input
-            style={inp}
-            placeholder="Password"
-            type="password"
-            value={form.password}
-            onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-            onKeyDown={e => e.key === 'Enter' && handle()}
-          />
+          <div style={{ position: 'relative' }}>
+            <input
+              style={{ ...inp, paddingRight: '3.2rem' }}
+              placeholder="Password"
+              type={showPassword ? 'text' : 'password'}
+              value={form.password}
+              onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+              onKeyDown={e => e.key === 'Enter' && handle()}
+              disabled={loading}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(prev => !prev)}
+              style={{
+                position: 'absolute', right: '0.8rem', top: '50%', transform: 'translateY(-50%)',
+                border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer',
+                fontSize: '0.95rem', padding: 0,
+              }}
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
+          </div>
         </>
       );
     }
@@ -105,6 +127,7 @@ export default function AuthModal({ onClose }) {
             placeholder="Full name"
             value={form.name}
             onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+            disabled={loading}
           />
           <input
             style={inp}
@@ -112,21 +135,36 @@ export default function AuthModal({ onClose }) {
             type="email"
             value={form.email}
             onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+            disabled={loading}
           />
           <input
             style={inp}
             placeholder="Mobile number (optional)"
             value={form.mobile}
             onChange={e => setForm(f => ({ ...f, mobile: e.target.value }))}
+            disabled={loading}
           />
-          <input
-            style={inp}
-            placeholder="Password"
-            type="password"
-            value={form.password}
-            onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-            onKeyDown={e => e.key === 'Enter' && handle()}
-          />
+          <div style={{ position: 'relative' }}>
+            <input
+              style={{ ...inp, paddingRight: '3.2rem' }}
+              placeholder="Password"
+              type={showPassword ? 'text' : 'password'}
+              value={form.password}
+              onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+              onKeyDown={e => e.key === 'Enter' && handle()}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(prev => !prev)}
+              style={{
+                position: 'absolute', right: '0.8rem', top: '50%', transform: 'translateY(-50%)',
+                border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer',
+                fontSize: '0.95rem', padding: 0,
+              }}
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
+          </div>
         </>
       );
     }
@@ -140,6 +178,7 @@ export default function AuthModal({ onClose }) {
           value={form.email}
           onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
           onKeyDown={e => e.key === 'Enter' && handle()}
+          disabled={loading}
         />
       );
     }
@@ -152,21 +191,37 @@ export default function AuthModal({ onClose }) {
           type="email"
           value={form.email}
           onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+          disabled={loading}
         />
         <input
           style={inp}
           placeholder="Verification code"
           value={form.code}
           onChange={e => setForm(f => ({ ...f, code: e.target.value }))}
+          disabled={loading}
         />
-        <input
-          style={inp}
-          placeholder="New password"
-          type="password"
-          value={form.newPassword}
-          onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))}
-          onKeyDown={e => e.key === 'Enter' && handle()}
-        />
+        <div style={{ position: 'relative' }}>
+          <input
+            style={{ ...inp, paddingRight: '3.2rem' }}
+            placeholder="New password"
+            type={showPassword ? 'text' : 'password'}
+            value={form.newPassword}
+            onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))}
+            onKeyDown={e => e.key === 'Enter' && handle()}
+            disabled={loading}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(prev => !prev)}
+            style={{
+              position: 'absolute', right: '0.8rem', top: '50%', transform: 'translateY(-50%)',
+              border: 'none', background: 'transparent', color: 'var(--muted)', cursor: 'pointer',
+              fontSize: '0.95rem', padding: 0,
+            }}
+          >
+            {showPassword ? 'Hide' : 'Show'}
+          </button>
+        </div>
       </>
     );
   };
@@ -186,10 +241,10 @@ export default function AuthModal({ onClose }) {
   }[mode];
 
   const buttonText = {
-    login: 'Sign in',
-    signup: 'Create account',
-    forgot: 'Send reset code',
-    reset: 'Reset password',
+    login: loading ? 'Signing in...' : 'Sign in',
+    signup: loading ? 'Creating account...' : 'Create account',
+    forgot: loading ? 'Sending code...' : 'Send reset code',
+    reset: loading ? 'Resetting password...' : 'Reset password',
   }[mode];
 
   return (
