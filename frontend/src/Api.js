@@ -36,6 +36,12 @@ export const authForgotPassword = (email) =>
 export const authResetPassword = (email, code, newPassword) =>
   apiClient.post('/auth/reset-password', { email, code, new_password: newPassword });
 
+export const authGetMe = () =>
+  apiClient.get('/auth/me', { headers: authHeaders() });
+
+export const authUpdateProfile = (updates) =>
+  apiClient.patch('/auth/profile', updates, { headers: authHeaders() });
+
 export const loadHistory = (moduleKey) =>
   apiClient.get(`/history/${moduleKey}`, { headers: authHeaders() });
 
