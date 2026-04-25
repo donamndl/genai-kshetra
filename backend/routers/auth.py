@@ -38,6 +38,11 @@ class ResetPasswordRequest(BaseModel):
     code: str
     new_password: str
 
+class UpdateProfileRequest(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    mobile: Optional[str] = None
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = 'bearer'
@@ -194,6 +199,51 @@ def reset_password(request: ResetPasswordRequest):
         {'$set': {'password': hashed_password}, '$unset': {'reset_code': '', 'reset_code_expires_at': ''}},
     )
     return {'message': 'Password reset successfully. You can now sign in with your new password.'}
+
+
+@router.patch('/profile', response_model=dict)
+def update_profile(request: UpdateProfileRequest, current_user: dict = Depends(get_current_user)):
+    updates = {}
+
+    if request.name is not None and request.name.strip():
+        updates['name'] = request.name.strip()
+
+    if request.email is not None:
+        new_email = request.email.strip().lower()
+        if new_email and new_email != current_user.get('email'):
+            if get_user_by_email(new_email):
+                raise HTTPException(status_code=400, detail='Email already in use.')
+            updates['email'] = new_email
+
+    if request.mobile is not None:
+        new_mobile = request.mobile.strip()
+        if new_mobile and new_mobile != current_user.get('mobile'):
+            if get_user_by_mobile(new_mobile):
+                raise HTTPException(status_code=400, detail='Mobile already in use.')
+            updates['mobile'] = new_mobile
+
+    if not updates:
+        return {
+            'user': {
+                'name': current_user['name'],
+                'email': current_user.get('email'),
+                'mobile': current_user.get('mobile'),
+            },
+            'access_token': create_access_token({'sub': current_user.get('email') or current_user.get('mobile')}),
+        }
+
+    db.users.update_one({'_id': current_user['_id']}, {'$set': updates})
+    updated_user = db.users.find_one({'_id': current_user['_id']})
+    access_token = create_access_token({'sub': updated_user.get('email') or updated_user.get('mobile')})
+    return {
+        'user': {
+            'name': updated_user['name'],
+            'email': updated_user.get('email'),
+            'mobile': updated_user.get('mobile'),
+        },
+        'access_token': access_token,
+        'token_type': 'bearer',
+    }
 
 
 @router.get('/me', response_model=dict)
