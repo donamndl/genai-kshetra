@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import Agriculture from './pages/Agriculture';
 import Education from './pages/Education';
 import Medical from './pages/Medical';
+import Profile from './pages/Profile';
 import './index.css';
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="/agriculture" element={<Agriculture />} />
             <Route path="/education"   element={<Education />}   />
             <Route path="/medical"     element={<Medical />}     />
+            <Route path="/profile"     element={<Profile />}     />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
