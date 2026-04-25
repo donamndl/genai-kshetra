@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from 'react';
-import { authLogin, authSignup, authForgotPassword, authResetPassword } from '../Api';
+import { authLogin, authSignup, authForgotPassword, authResetPassword, authGetMe, authUpdateProfile } from '../Api';
 
 const AuthContext = createContext();
 
@@ -38,6 +38,27 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const getProfile = async () => {
+    try {
+      const response = await authGetMe();
+      const userData = response.data.user;
+      setUser(userData);
+      return { success: true, user: userData };
+    } catch (error) {
+      return { error: error.response?.data?.detail || 'Unable to load profile.' };
+    }
+  };
+
+  const updateProfile = async (name, email, mobile) => {
+    try {
+      const response = await authUpdateProfile({ name, email, mobile });
+      saveSession(response.data.user, response.data.access_token);
+      return { success: true, user: response.data.user };
+    } catch (error) {
+      return { error: error.response?.data?.detail || 'Unable to update profile.' };
+    }
+  };
+
   const forgotPassword = async (email) => {
     try {
       const response = await authForgotPassword(email);
@@ -68,7 +89,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, signup, login, logout, forgotPassword, resetPassword }}>
+    <AuthContext.Provider value={{ user, token, signup, login, logout, forgotPassword, resetPassword, getProfile, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );
