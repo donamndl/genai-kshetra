@@ -2,53 +2,39 @@ import ChatBox from '../components/ChatBox';
 import { askMedical } from '../api';
 import Footer from '../components/Footer';
 
-function ModuleHeader({ emoji, title, subtitle, color, bg, border }) {
-  return (
-    <div style={{
-      padding: '1.5rem 2rem',
-      background: bg,
-      borderBottom: `1px solid ${border}`,
-      display: 'flex', alignItems: 'center', gap: '1.25rem',
-      position: 'relative', overflow: 'hidden',
-    }}>
-      <div style={{
-        position: 'absolute', right: '-40px', top: '-40px',
-        width: '180px', height: '180px',
-        background: `radial-gradient(circle, ${color}10, transparent 70%)`,
-        pointerEvents: 'none',
-      }} />
-      <div style={{
-        width: '50px', height: '50px', borderRadius: '14px', flexShrink: 0,
-        background: `${color}14`, border: `1px solid ${color}30`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: '1.5rem', boxShadow: `0 4px 16px ${color}20`,
-      }}>{emoji}</div>
-      <div>
-        <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color, letterSpacing: '-0.2px' }}>{title}</h2>
-        <p style={{ color: 'var(--muted)', fontSize: '0.82rem', marginTop: '0.2rem' }}>{subtitle}</p>
-      </div>
-    </div>
-  );
-}
-
 export default function Medical() {
   return (
-    <div>
-      <ModuleHeader
-        emoji="🏥"
-        title="Medical Assistant"
-        subtitle="Health info, alerts, hospital directions — Odisha region"
-        color="#f06292"
-        bg="linear-gradient(135deg, #4a0a2418, transparent)"
-        border="#f0629222"
-      />
-      <ChatBox
-        accentColor="#f06292"
-        placeholder="e.g. What are the symptoms of dengue fever?"
-        onSend={q => askMedical(q)}
-        moduleKey="medical"
-      />
-      <Footer />
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Module header */}
+      <div style={{
+        padding: '1rem 1.5rem',
+        background: 'linear-gradient(135deg, #4a0a2418, transparent)',
+        borderBottom: '1px solid #f0629222',
+        display: 'flex', alignItems: 'center', gap: '1rem',
+        flexShrink: 0, position: 'relative', overflow: 'hidden',
+      }}>
+        <div style={{ position: 'absolute', right: '-30px', top: '-30px', width: '150px', height: '150px', background: 'radial-gradient(circle, #f062920d, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{
+          width: '42px', height: '42px', borderRadius: '12px', flexShrink: 0,
+          background: '#f0629214', border: '1px solid #f062922e',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem',
+          boxShadow: '0 3px 12px #f062921a',
+        }}>🏥</div>
+        <div>
+          <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#f06292', letterSpacing: '-0.2px' }}>Medical Assistant</h2>
+          <p style={{ color: 'var(--muted)', fontSize: '0.78rem', marginTop: '0.15rem' }}>Health info, alerts, hospital directions — Odisha region</p>
+        </div>
+      </div>
+
+      {/* Chat fills remaining height */}
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <ChatBox
+          accentColor="#f06292"
+          placeholder="Ask anything about medical..."
+          onSend={q => askMedical(q)}
+          moduleKey="medical"
+        />
+      </div>
     </div>
   );
 }
