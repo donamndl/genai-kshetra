@@ -11,43 +11,34 @@ import Medical from './pages/Medical';
 import Profile from './pages/Profile';
 import './index.css';
 
-function Layout({ onAuthClick }) {
-  const [collapsed, setCollapsed] = useState(false);
-
-  return (
-    <>
-      <Sidebar onAuthClick={onAuthClick} collapsed={collapsed} onCollapse={setCollapsed} />
-      <div id="main-content" style={{
-        marginLeft: collapsed ? '64px' : '240px',
-        minHeight: '100vh',
-        transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)',
-      }}>
-        <Routes>
-          <Route path="/"            element={<Home />}        />
-          <Route path="/agriculture" element={<Agriculture />} />
-          <Route path="/education"   element={<Education />}   />
-          <Route path="/medical"     element={<Medical />}     />
-          <Route path="/profile"     element={<Profile />}     />
-        </Routes>
-      </div>
-      <style>{`
-        @media (max-width: 768px) {
-          #main-content { margin-left: 0 !important; padding-top: 52px; }
-        }
-      `}</style>
-    </>
-  );
-}
-
 export default function App() {
   const [showAuth, setShowAuth] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
-          {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
-          <Layout onAuthClick={() => setShowAuth(true)} />
+          <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+            <Sidebar
+              onAuthClick={() => setShowAuth(true)}
+              collapsed={sidebarCollapsed}
+              setCollapsed={setSidebarCollapsed}
+            />
+            <main style={{
+              flex: 1, overflowY: 'auto', minWidth: 0,
+              background: 'var(--bg)', transition: 'background 0.3s',
+            }}>
+              {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+              <Routes>
+                <Route path="/"            element={<Home />}        />
+                <Route path="/agriculture" element={<Agriculture />} />
+                <Route path="/education"   element={<Education />}   />
+                <Route path="/medical"     element={<Medical />}     />
+                <Route path="/profile"     element={<Profile />}     />
+              </Routes>
+            </main>
+          </div>
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>
