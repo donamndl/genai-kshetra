@@ -1,59 +1,39 @@
-// Agriculture.jsx
 import ChatBox from '../components/ChatBox';
 import { askAgriculture } from '../api';
 import Footer from '../components/Footer';
 
 export default function Agriculture() {
   return (
-    <div>
-      <ModuleHeader
-        emoji="🌾"
-        title="Agriculture Assistant"
-        subtitle="Crops, soil, weather, schemes — for farmers across India"
-        color="#2dd4a0"
-        bg="linear-gradient(135deg, #064e3b18, transparent)"
-        border="#2dd4a022"
-      />
-      <ChatBox
-        accentColor="#2dd4a0"
-        placeholder="e.g. Which crops should I grow in Kharif season in Odisha?"
-        onSend={q => askAgriculture(q)}
-        moduleKey="agriculture"
-      />
-      <Footer />
-    </div>
-  );
-}
-
-// ── Shared header component ────────────────────────────────────────────────────
-function ModuleHeader({ emoji, title, subtitle, color, bg, border }) {
-  return (
-    <div style={{
-      padding: '1.5rem 2rem',
-      background: bg,
-      borderBottom: `1px solid ${border}`,
-      display: 'flex', alignItems: 'center', gap: '1.25rem',
-      position: 'relative', overflow: 'hidden',
-    }}>
-      {/* Subtle background glow */}
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Module header */}
       <div style={{
-        position: 'absolute', right: '-40px', top: '-40px',
-        width: '180px', height: '180px',
-        background: `radial-gradient(circle, ${color}10, transparent 70%)`,
-        pointerEvents: 'none',
-      }} />
+        padding: '1rem 1.5rem',
+        background: 'linear-gradient(135deg, #064e3b18, transparent)',
+        borderBottom: '1px solid #2dd4a022',
+        display: 'flex', alignItems: 'center', gap: '1rem',
+        flexShrink: 0, position: 'relative', overflow: 'hidden',
+      }}>
+        <div style={{ position: 'absolute', right: '-30px', top: '-30px', width: '150px', height: '150px', background: 'radial-gradient(circle, #2dd4a00d, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{
+          width: '42px', height: '42px', borderRadius: '12px', flexShrink: 0,
+          background: '#2dd4a014', border: '1px solid #2dd4a02e',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem',
+          boxShadow: '0 3px 12px #2dd4a01a',
+        }}>🌾</div>
+        <div>
+          <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#2dd4a0', letterSpacing: '-0.2px' }}>Agriculture Assistant</h2>
+          <p style={{ color: 'var(--muted)', fontSize: '0.78rem', marginTop: '0.15rem' }}>Crops, soil, weather, schemes — for farmers across India</p>
+        </div>
+      </div>
 
-      <div style={{
-        width: '50px', height: '50px', borderRadius: '14px', flexShrink: 0,
-        background: `${color}14`, border: `1px solid ${color}30`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: '1.5rem',
-        boxShadow: `0 4px 16px ${color}20`,
-      }}>{emoji}</div>
-
-      <div>
-        <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color, letterSpacing: '-0.2px' }}>{title}</h2>
-        <p style={{ color: 'var(--muted)', fontSize: '0.82rem', marginTop: '0.2rem' }}>{subtitle}</p>
+      {/* Chat fills remaining height */}
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <ChatBox
+          accentColor="#2dd4a0"
+          placeholder="Ask anything about agriculture..."
+          onSend={q => askAgriculture(q)}
+          moduleKey="agriculture"
+        />
       </div>
     </div>
   );
