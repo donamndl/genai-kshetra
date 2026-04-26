@@ -3,423 +3,386 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 
-const NAV_LINKS = [
-  { to: '/',            emoji: '🏠', label: 'Home',        color: '#3b9eff' },
-  { to: '/agriculture', emoji: '🌾', label: 'Agriculture', color: '#2dd4a0' },
-  { to: '/education',   emoji: '📚', label: 'Education',   color: '#9d7ff4' },
-  { to: '/medical',     emoji: '🏥', label: 'Medical',     color: '#f06292' },
+const MODULES = [
+  { to: '/agriculture', emoji: '🌾', label: 'Agriculture', color: '#2dd4a0', key: 'agriculture' },
+  { to: '/education',   emoji: '📚', label: 'Education',   color: '#9d7ff4', key: 'education'   },
+  { to: '/medical',     emoji: '🏥', label: 'Medical',     color: '#f06292', key: 'medical'     },
 ];
 
-// Pull chat history from localStorage for each module
-function useChatHistories(user) {
-  const [histories, setHistories] = useState({});
+const HISTORY_KEYS = [
+  { key: 'general',     to: '/',            emoji: '💬' },
+  { key: 'agriculture', to: '/agriculture', emoji: '🌾' },
+  { key: 'education',   to: '/education',   emoji: '📚' },
+  { key: 'medical',     to: '/medical',     emoji: '🏥' },
+];
 
-  useEffect(() => {
-    const modules = ['general', 'agriculture', 'education', 'medical'];
-    const result = {};
-    modules.forEach(mod => {
-      const key = user ? `ls-history-${user.email}-${mod}` : null;
-      if (!key) return;
-      try {
-        const msgs = JSON.parse(localStorage.getItem(key) || '[]');
-        // Get last user message as preview
-        const lastUser = [...msgs].reverse().find(m => m.role === 'user');
-        if (lastUser) result[mod] = { preview: lastUser.text, count: msgs.length };
-      } catch {}
-    });
-    setHistories(result);
-  }, [user]);
-
-  return histories;
+function getLocalHistory(email) {
+  const sessions = [];
+  for (const { key, to, emoji } of HISTORY_KEYS) {
+    try {
+      const stored = localStorage.getItem(`ls-history-${email}-${key}`);
+      if (!stored) continue;
+      const msgs = JSON.parse(stored);
+      if (!msgs.length) continue;
+      const firstUser = msgs.find(m => m.role === 'user');
+      if (firstUser) {
+        sessions.push({
+          key, to, emoji,
+          label: firstUser.text.length > 36 ? firstUser.text.slice(0, 36) + '…' : firstUser.text,
+          ts: firstUser.ts || 0,
+          count: msgs.filter(m => m.role === 'user').length,
+        });
+      }
+    } catch {}
+  }
+  return sessions.sort((a, b) => b.ts - a.ts);
 }
 
-export default function Sidebar({ onAuthClick }) {
+export default function Sidebar({ onAuthClick, collapsed, setCollapsed }) {
   const { theme, toggle } = useTheme();
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [collapsed, setCollapsed] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const histories = useChatHistories(user);
+  const [history, setHistory] = useState([]);
 
-  const isActive = (path) =>
-    path === '/' ? location.pathname === '/' : location.pathname === path;
+  const isActive = (path) => location.pathname === path;
 
-  const SIDEBAR_W = collapsed ? '64px' : '240px';
+  useEffect(() => {
+    if (user?.email) setHistory(getLocalHistory(user.email));
+    else setHistory([]);
+  }, [user, location.pathname]);
 
-  const moduleLabels = {
-    general: { emoji: '💬', label: 'General', color: '#3b9eff' },
-    agriculture: { emoji: '🌾', label: 'Agriculture', color: '#2dd4a0' },
-    education: { emoji: '📚', label: 'Education', color: '#9d7ff4' },
-    medical: { emoji: '🏥', label: 'Medical', color: '#f06292' },
-  };
-
-  const historyEntries = Object.entries(histories);
+  const W = collapsed ? 60 : 256;
 
   return (
     <>
-      {/* ── Mobile top bar ── */}
-      <div style={{
-        display: 'none', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 300,
-        height: '52px', background: 'var(--bg2)', borderBottom: '1px solid var(--border)',
-        alignItems: 'center', justifyContent: 'space-between', padding: '0 1rem',
-      }} className="mobile-topbar">
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '1.2rem' }}>🌿</span>
-          <span style={{
-            fontWeight: 700, fontSize: '1.1rem',
-            background: 'linear-gradient(135deg, #3b9eff, #9d7ff4)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-          }}>Kshetra</span>
-        </Link>
-        <button onClick={() => setMobileOpen(o => !o)} style={{
-          width: '36px', height: '36px', borderRadius: '8px',
-          border: '1px solid var(--border)', background: 'var(--bg3)',
-          cursor: 'pointer', fontSize: '1rem',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>{mobileOpen ? '✕' : '☰'}</button>
-      </div>
-
-      {/* ── Sidebar ── */}
       <aside style={{
-        position: 'fixed', top: 0, left: 0, bottom: 0,
-        width: SIDEBAR_W,
+        width: `${W}px`,
+        minWidth: `${W}px`,
+        height: '100vh',
+        position: 'sticky',
+        top: 0,
+        display: 'flex',
+        flexDirection: 'column',
         background: 'var(--bg2)',
         borderRight: '1px solid var(--border)',
-        display: 'flex', flexDirection: 'column',
-        zIndex: 100,
-        transition: 'width 0.25s cubic-bezier(0.4,0,0.2,1)',
+        transition: 'width 0.22s cubic-bezier(0.4,0,0.2,1), min-width 0.22s cubic-bezier(0.4,0,0.2,1)',
         overflow: 'hidden',
-      }} className="sidebar">
+        zIndex: 100,
+        flexShrink: 0,
+      }}>
 
-        {/* ── Top: logo + collapse ── */}
+        {/* ── Logo + collapse toggle ── */}
         <div style={{
-          height: '56px', flexShrink: 0,
           display: 'flex', alignItems: 'center',
           justifyContent: collapsed ? 'center' : 'space-between',
-          padding: collapsed ? '0' : '0 0.75rem 0 1rem',
+          padding: '0 0.75rem',
+          height: '56px',
           borderBottom: '1px solid var(--border)',
+          gap: '0.5rem',
+          flexShrink: 0,
         }}>
           {!collapsed && (
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', minWidth: 0 }}>
               <div style={{
-                width: '28px', height: '28px', borderRadius: '8px',
-                background: 'linear-gradient(135deg, #3b9eff22, #9d7ff422)',
+                width: '28px', height: '28px', borderRadius: '8px', flexShrink: 0,
+                background: 'linear-gradient(135deg, #3b9eff22, #6366f122)',
                 border: '1px solid rgba(59,158,255,0.25)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem',
               }}>🌿</div>
               <span style={{
-                fontWeight: 700, fontSize: '1.05rem', letterSpacing: '-0.3px',
+                fontFamily: "'Sora', sans-serif", fontSize: '1.05rem', fontWeight: 700,
                 background: 'linear-gradient(135deg, #3b9eff, #9d7ff4)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                letterSpacing: '-0.3px', whiteSpace: 'nowrap',
               }}>Kshetra</span>
             </Link>
           )}
-          <button onClick={() => setCollapsed(c => !c)} title={collapsed ? 'Expand' : 'Collapse'} style={{
-            width: '28px', height: '28px', borderRadius: '6px',
+          {collapsed && (
+            <Link to="/" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{
+                width: '28px', height: '28px', borderRadius: '8px',
+                background: 'linear-gradient(135deg, #3b9eff22, #6366f122)',
+                border: '1px solid rgba(59,158,255,0.25)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem',
+              }}>🌿</div>
+            </Link>
+          )}
+          <button onClick={() => setCollapsed(c => !c)} style={{
+            width: '26px', height: '26px', borderRadius: '6px', flexShrink: 0,
             border: '1px solid var(--border)', background: 'transparent',
-            color: 'var(--muted)', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem',
-            flexShrink: 0,
-            transition: 'background 0.15s, color 0.15s',
+            color: 'var(--muted)', cursor: 'pointer', fontSize: '0.7rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'all 0.15s',
           }}
             onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg3)'; e.currentTarget.style.color = 'var(--text)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--muted)'; }}
+            title={collapsed ? 'Expand' : 'Collapse'}
           >
-            {collapsed ? '›' : '‹'}
+            {collapsed ? '▶' : '◀'}
           </button>
         </div>
 
-        {/* ── Nav links ── */}
-        <div style={{ padding: '0.6rem 0.5rem', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-          {NAV_LINKS.map(link => {
-            const active = isActive(link.to);
+        {/* ── New Chat ── */}
+        <div style={{ padding: '0.6rem 0.6rem 0.3rem', flexShrink: 0 }}>
+          <button onClick={() => navigate('/')} style={{
+            width: '100%',
+            padding: collapsed ? '0.55rem 0' : '0.55rem 0.7rem',
+            borderRadius: '9px', border: '1px solid var(--border)',
+            background: 'var(--bg3)', color: 'var(--text2)',
+            fontSize: '0.81rem', fontWeight: 500, cursor: 'pointer',
+            display: 'flex', alignItems: 'center',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            gap: '0.5rem', transition: 'all 0.15s',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.background = 'rgba(59,158,255,0.06)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text2)'; e.currentTarget.style.background = 'var(--bg3)'; }}
+            title="New chat"
+          >
+            <span style={{ fontSize: '0.9rem' }}>✏️</span>
+            {!collapsed && <span>New Chat</span>}
+          </button>
+        </div>
+
+        {/* ── Modules nav ── */}
+        <div style={{ padding: '0 0.6rem', flexShrink: 0 }}>
+          {!collapsed && (
+            <p style={{ fontSize: '0.63rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '0.6rem 0.4rem 0.3rem' }}>
+              Modules
+            </p>
+          )}
+          {collapsed && <div style={{ height: '0.5rem' }} />}
+          {MODULES.map(m => {
+            const active = isActive(m.to);
             return (
-              <Link key={link.to} to={link.to} title={collapsed ? link.label : ''} style={{
+              <Link key={m.to} to={m.to} style={{
                 display: 'flex', alignItems: 'center',
-                gap: collapsed ? '0' : '0.65rem',
                 justifyContent: collapsed ? 'center' : 'flex-start',
-                padding: collapsed ? '0.6rem' : '0.6rem 0.75rem',
-                borderRadius: '10px',
-                color: active ? link.color : 'var(--text2)',
-                background: active ? `${link.color}12` : 'transparent',
-                border: `1px solid ${active ? `${link.color}25` : 'transparent'}`,
-                fontSize: '0.875rem', fontWeight: active ? 600 : 400,
-                marginBottom: '2px',
-                transition: 'all 0.15s',
-                textDecoration: 'none',
-                overflow: 'hidden',
+                gap: '0.6rem',
+                padding: collapsed ? '0.55rem 0' : '0.5rem 0.7rem',
+                borderRadius: '8px', textDecoration: 'none',
+                color: active ? m.color : 'var(--text2)',
+                background: active ? `${m.color}12` : 'transparent',
+                border: `1px solid ${active ? `${m.color}22` : 'transparent'}`,
+                fontSize: '0.82rem', fontWeight: active ? 600 : 400,
+                transition: 'all 0.14s', marginBottom: '2px',
               }}
-                onMouseEnter={e => { if (!active) { e.currentTarget.style.background = 'var(--bg3)'; e.currentTarget.style.color = link.color; }}}
+                onMouseEnter={e => { if (!active) { e.currentTarget.style.background = 'var(--bg3)'; e.currentTarget.style.color = 'var(--text)'; }}}
                 onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text2)'; }}}
+                title={collapsed ? m.label : undefined}
               >
-                <span style={{ fontSize: '1rem', flexShrink: 0 }}>{link.emoji}</span>
-                {!collapsed && <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{link.label}</span>}
+                <span style={{ fontSize: '0.95rem', flexShrink: 0 }}>{m.emoji}</span>
+                {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{m.label}</span>}
               </Link>
             );
           })}
         </div>
 
-        {/* ── History ── */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem' }}>
-          {!collapsed && (
-            <>
-              <p style={{
-                fontSize: '0.68rem', color: 'var(--muted)',
-                textTransform: 'uppercase', letterSpacing: '0.1em',
-                padding: '0.5rem 0.75rem 0.35rem',
+        {/* ── Divider ── */}
+        <div style={{ height: '1px', background: 'var(--border)', margin: '0.5rem 0.75rem', flexShrink: 0 }} />
+
+        {/* ── Chat History (scrollable) ── */}
+        {!collapsed ? (
+          <div style={{ flex: 1, overflowY: 'auto', padding: '0 0.6rem', minHeight: 0 }}>
+            <p style={{ fontSize: '0.63rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '0.1rem 0.4rem 0.4rem' }}>
+              History
+            </p>
+
+            {!user ? (
+              <div style={{
+                padding: '0.9rem 0.75rem', borderRadius: '10px',
+                background: 'var(--bg3)', border: '1px solid var(--border)',
+                textAlign: 'center',
               }}>
-                {user ? 'Recent chats' : 'History'}
+                <p style={{ fontSize: '0.74rem', color: 'var(--muted)', lineHeight: 1.55, marginBottom: '0.7rem' }}>
+                  Sign in to save and view your chat history
+                </p>
+                <button onClick={onAuthClick} style={{
+                  padding: '0.4rem 0.9rem', borderRadius: '7px', border: 'none',
+                  background: 'linear-gradient(135deg, var(--accent), #6366f1)',
+                  color: '#fff', fontSize: '0.73rem', fontWeight: 600, cursor: 'pointer',
+                }}>Sign in</button>
+              </div>
+            ) : history.length === 0 ? (
+              <p style={{ fontSize: '0.75rem', color: 'var(--muted)', padding: '0.1rem 0.4rem', lineHeight: 1.6 }}>
+                Your conversations will appear here.
               </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                {history.map(h => (
+                  <Link key={h.key} to={h.to} style={{
+                    display: 'flex', alignItems: 'center', gap: '0.5rem',
+                    padding: '0.5rem 0.6rem', borderRadius: '7px',
+                    textDecoration: 'none', color: isActive(h.to) ? 'var(--text)' : 'var(--text2)',
+                    background: isActive(h.to) ? 'var(--bg3)' : 'transparent',
+                    border: `1px solid ${isActive(h.to) ? 'var(--border)' : 'transparent'}`,
+                    transition: 'all 0.12s', fontSize: '0.78rem',
+                  }}
+                    onMouseEnter={e => { if (!isActive(h.to)) { e.currentTarget.style.background = 'var(--bg3)'; e.currentTarget.style.color = 'var(--text)'; }}}
+                    onMouseLeave={e => { if (!isActive(h.to)) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text2)'; }}}
+                  >
+                    <span style={{ fontSize: '0.8rem', flexShrink: 0, opacity: 0.65 }}>{h.emoji}</span>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{h.label}</span>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--muted)', flexShrink: 0, background: 'var(--bg3)', padding: '0.1rem 0.35rem', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                      {h.count}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ flex: 1 }} />
+        )}
 
-              {!user ? (
-                <div style={{
-                  padding: '1rem 0.75rem', borderRadius: '10px',
-                  background: 'var(--bg3)', border: '1px solid var(--border)',
-                  margin: '0.25rem 0',
-                }}>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--muted)', lineHeight: 1.6, marginBottom: '0.75rem' }}>
-                    Sign in to see your chat history across all modules.
-                  </p>
-                  <button onClick={onAuthClick} style={{
-                    width: '100%', padding: '0.55rem',
-                    borderRadius: '8px', border: 'none',
-                    background: 'linear-gradient(135deg, #3b9eff, #6366f1)',
-                    color: '#fff', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer',
-                  }}>Sign in</button>
-                </div>
-              ) : historyEntries.length === 0 ? (
-                <div style={{ padding: '0.75rem', textAlign: 'center' }}>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--muted)', lineHeight: 1.6 }}>
-                    No chats yet. Start a conversation!
-                  </p>
-                </div>
-              ) : (
-                historyEntries.map(([mod, data]) => {
-                  const m = moduleLabels[mod];
-                  const navTo = mod === 'general' ? '/' : `/${mod}`;
-                  return (
-                    <button key={mod} onClick={() => navigate(navTo)} style={{
-                      width: '100%', textAlign: 'left',
-                      padding: '0.6rem 0.75rem', borderRadius: '10px',
-                      border: '1px solid transparent',
-                      background: 'transparent',
-                      cursor: 'pointer', marginBottom: '2px',
-                      transition: 'all 0.15s',
-                    }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg3)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
-                        <span style={{ fontSize: '0.78rem' }}>{m.emoji}</span>
-                        <span style={{ fontSize: '0.73rem', fontWeight: 600, color: m.color }}>{m.label}</span>
-                        <span style={{
-                          marginLeft: 'auto', fontSize: '0.65rem',
-                          background: `${m.color}18`, color: m.color,
-                          padding: '0.1rem 0.4rem', borderRadius: '999px',
-                        }}>{data.count}</span>
-                      </div>
-                      <p style={{
-                        margin: 0, fontSize: '0.77rem', color: 'var(--muted)',
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>{data.preview}</p>
-                    </button>
-                  );
-                })
-              )}
-            </>
-          )}
-
-          {/* Collapsed: show history dots */}
-          {collapsed && user && historyEntries.map(([mod]) => {
-            const m = moduleLabels[mod];
-            const navTo = mod === 'general' ? '/' : `/${mod}`;
-            return (
-              <button key={mod} onClick={() => navigate(navTo)} title={m.label} style={{
-                width: '100%', padding: '0.6rem 0',
-                display: 'flex', justifyContent: 'center',
-                border: 'none', background: 'transparent', cursor: 'pointer',
-                fontSize: '1rem', borderRadius: '8px',
-                transition: 'background 0.15s',
-              }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg3)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              >{m.emoji}</button>
-            );
-          })}
-        </div>
-
-        {/* ── Bottom: theme + profile ── */}
+        {/* ── Bottom controls ── */}
         <div style={{
-          padding: '0.5rem',
           borderTop: '1px solid var(--border)',
-          flexShrink: 0,
+          padding: '0.6rem',
           display: 'flex', flexDirection: 'column', gap: '2px',
+          flexShrink: 0,
         }}>
           {/* Theme toggle */}
-          <button onClick={toggle} title="Toggle theme" style={{
-            display: 'flex', alignItems: 'center',
-            gap: collapsed ? '0' : '0.65rem',
-            justifyContent: collapsed ? 'center' : 'flex-start',
-            padding: collapsed ? '0.6rem' : '0.6rem 0.75rem',
-            borderRadius: '10px', border: 'none',
+          <button onClick={toggle} style={{
+            width: '100%', padding: collapsed ? '0.55rem 0' : '0.5rem 0.7rem',
+            borderRadius: '8px', border: '1px solid transparent',
             background: 'transparent', color: 'var(--text2)',
-            fontSize: '0.875rem', cursor: 'pointer',
-            transition: 'background 0.15s',
-            width: '100%',
+            fontSize: '0.81rem', cursor: 'pointer',
+            display: 'flex', alignItems: 'center',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            gap: '0.6rem', transition: 'all 0.14s',
           }}
-            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg3)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg3)'; e.currentTarget.style.color = 'var(--text)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text2)'; }}
+            title={theme === 'dark' ? 'Switch to light' : 'Switch to dark'}
           >
-            <span style={{ fontSize: '1rem', flexShrink: 0 }}>{theme === 'dark' ? '🌙' : '☀️'}</span>
-            {!collapsed && <span style={{ whiteSpace: 'nowrap' }}>{theme === 'dark' ? 'Dark mode' : 'Light mode'}</span>}
+            <span style={{ fontSize: '0.95rem', flexShrink: 0 }}>{theme === 'dark' ? '🌙' : '☀️'}</span>
+            {!collapsed && <span>{theme === 'dark' ? 'Dark mode' : 'Light mode'}</span>}
           </button>
 
           {/* Profile / Sign in */}
           {user ? (
-            <button onClick={() => setProfileOpen(true)} title={collapsed ? user.name : ''} style={{
+            <button onClick={() => setProfileOpen(true)} style={{
+              width: '100%', padding: collapsed ? '0.55rem 0' : '0.5rem 0.7rem',
+              borderRadius: '8px', border: '1px solid transparent',
+              background: 'transparent', cursor: 'pointer',
               display: 'flex', alignItems: 'center',
-              gap: collapsed ? '0' : '0.65rem',
               justifyContent: collapsed ? 'center' : 'flex-start',
-              padding: collapsed ? '0.5rem' : '0.5rem 0.75rem',
-              borderRadius: '10px', border: '1px solid transparent',
-              background: 'transparent', color: 'var(--text)',
-              fontSize: '0.875rem', cursor: 'pointer',
-              transition: 'all 0.15s', width: '100%',
+              gap: '0.65rem', transition: 'all 0.14s',
             }}
               onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg3)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
+              title={user.name}
             >
               <div style={{
-                width: '28px', height: '28px', borderRadius: '50%',
+                width: '26px', height: '26px', borderRadius: '50%', flexShrink: 0,
                 background: 'linear-gradient(135deg, var(--accent), var(--purple))',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 700, fontSize: '0.8rem', color: '#fff', flexShrink: 0,
+                fontWeight: 700, fontSize: '0.7rem', color: '#fff',
               }}>{user.name[0].toUpperCase()}</div>
               {!collapsed && (
-                <div style={{ textAlign: 'left', overflow: 'hidden' }}>
-                  <p style={{ margin: 0, fontWeight: 600, fontSize: '0.82rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</p>
-                  <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email || user.mobile || ''}</p>
+                <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.8rem', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {user.name}
+                  </div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {user.email || user.mobile || 'Logged in'}
+                  </div>
                 </div>
               )}
             </button>
           ) : (
-            <button onClick={onAuthClick} title={collapsed ? 'Sign in' : ''} style={{
+            <button onClick={onAuthClick} style={{
+              width: '100%', padding: collapsed ? '0.55rem 0' : '0.55rem 0.7rem',
+              borderRadius: '8px', border: 'none',
+              background: 'linear-gradient(135deg, var(--accent), #6366f1)',
+              color: '#fff', fontSize: '0.81rem', fontWeight: 600, cursor: 'pointer',
               display: 'flex', alignItems: 'center',
-              gap: collapsed ? '0' : '0.65rem',
               justifyContent: collapsed ? 'center' : 'flex-start',
-              padding: collapsed ? '0.6rem' : '0.6rem 0.75rem',
-              borderRadius: '10px', border: 'none',
-              background: 'linear-gradient(135deg, #3b9eff, #6366f1)',
-              color: '#fff', fontSize: '0.875rem', fontWeight: 600,
-              cursor: 'pointer', width: '100%',
-            }}>
-              <span style={{ fontSize: '1rem', flexShrink: 0 }}>👤</span>
+              gap: '0.55rem', boxShadow: '0 2px 10px rgba(59,158,255,0.2)',
+            }} title="Sign in">
+              <span style={{ fontSize: '0.95rem' }}>👤</span>
               {!collapsed && <span>Sign in</span>}
             </button>
           )}
         </div>
       </aside>
 
-      {/* ── Profile modal ── */}
+      {/* ── Profile popup (slides up from bottom-left) ── */}
       {profileOpen && user && (
         <div onClick={() => setProfileOpen(false)} style={{
           position: 'fixed', inset: 0, zIndex: 400,
-          background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)',
         }}>
           <div onClick={e => e.stopPropagation()} style={{
-            width: '360px', maxWidth: '90vw',
-            background: 'var(--card)', borderRadius: '20px',
+            position: 'absolute',
+            bottom: 0, left: `${W}px`,
+            width: '290px',
+            background: 'var(--card)',
             border: '1px solid var(--border)',
-            boxShadow: '0 24px 80px rgba(0,0,0,0.4)',
-            padding: '1.75rem',
-            animation: 'fadeUp 0.25s ease',
+            borderRadius: '16px 16px 0 0',
+            boxShadow: '0 -8px 40px rgba(0,0,0,0.25)',
+            padding: '1.25rem',
+            display: 'flex', flexDirection: 'column', gap: '0.85rem',
+            animation: 'slideUp 0.22s cubic-bezier(0.34,1.56,0.64,1)',
           }}>
-            {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 700 }}>My Profile</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 700 }}>Your profile</h3>
               <button onClick={() => setProfileOpen(false)} style={{
-                width: '30px', height: '30px', borderRadius: '8px',
+                width: '26px', height: '26px', borderRadius: '6px',
                 border: '1px solid var(--border)', background: 'var(--bg3)',
-                color: 'var(--muted)', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem',
+                color: 'var(--muted)', cursor: 'pointer', fontSize: '0.8rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>✕</button>
             </div>
 
-            {/* Avatar */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <div style={{
-                width: '52px', height: '52px', borderRadius: '50%',
+                width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0,
                 background: 'linear-gradient(135deg, var(--accent), var(--purple))',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 700, fontSize: '1.3rem', color: '#fff', flexShrink: 0,
+                fontWeight: 700, fontSize: '1rem', color: '#fff',
               }}>{user.name[0].toUpperCase()}</div>
               <div>
-                <p style={{ fontWeight: 700, fontSize: '1rem', margin: 0 }}>{user.name}</p>
-                <p style={{ fontSize: '0.8rem', color: 'var(--muted)', margin: '0.2rem 0 0' }}>
-                  {user.email || user.mobile || 'No contact info'}
-                </p>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{user.name}</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>{user.email || user.mobile}</div>
               </div>
             </div>
 
-            {/* Info rows */}
-            {[
-              { icon: '✉️', label: 'Email', val: user.email || 'Not provided' },
-              { icon: '📱', label: 'Mobile', val: user.mobile || 'Not provided' },
-            ].map(item => (
-              <div key={item.label} style={{
-                padding: '0.75rem 1rem', borderRadius: '10px',
-                background: 'var(--bg3)', border: '1px solid var(--border)',
-                marginBottom: '0.6rem',
-              }}>
-                <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--muted)' }}>{item.icon} {item.label}</p>
-                <p style={{ margin: '0.25rem 0 0', fontSize: '0.88rem', color: 'var(--text)', wordBreak: 'break-all' }}>{item.val}</p>
-              </div>
-            ))}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+              {[
+                { label: 'Email', val: user.email || '—' },
+                { label: 'Mobile', val: user.mobile || '—' },
+              ].map(item => (
+                <div key={item.label} style={{
+                  padding: '0.6rem 0.75rem', borderRadius: '9px',
+                  background: 'var(--bg3)', border: '1px solid var(--border)',
+                }}>
+                  <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.65rem', marginBottom: '0.15rem' }}>{item.label}</p>
+                  <p style={{ margin: 0, color: 'var(--text)', fontSize: '0.8rem', wordBreak: 'break-all' }}>{item.val}</p>
+                </div>
+              ))}
+            </div>
 
             <button onClick={() => { logout(); setProfileOpen(false); window.location.reload(); }} style={{
-              marginTop: '0.75rem', width: '100%', padding: '0.8rem',
-              border: 'none', borderRadius: '12px',
+              width: '100%', padding: '0.7rem', border: 'none', borderRadius: '9px',
               background: 'linear-gradient(135deg, #ef4444, #f97316)',
-              color: '#fff', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(239,68,68,0.2)',
+              color: '#fff', fontWeight: 700, fontSize: '0.84rem', cursor: 'pointer',
+              boxShadow: '0 3px 12px rgba(239,68,68,0.2)',
             }}>Sign out</button>
           </div>
         </div>
       )}
 
-      {/* ── Mobile overlay ── */}
-      {mobileOpen && (
-        <div onClick={() => setMobileOpen(false)} style={{
-          position: 'fixed', inset: 0, zIndex: 290,
-          background: 'rgba(0,0,0,0.5)',
-        }}>
-          <div onClick={e => e.stopPropagation()} style={{
-            width: '240px', height: '100%',
-            background: 'var(--bg2)', borderRight: '1px solid var(--border)',
-            padding: '1rem 0.75rem',
-            display: 'flex', flexDirection: 'column', gap: '0.25rem',
-            paddingTop: '4.5rem',
-          }}>
-            {NAV_LINKS.map(link => (
-              <Link key={link.to} to={link.to} onClick={() => setMobileOpen(false)} style={{
-                display: 'flex', alignItems: 'center', gap: '0.65rem',
-                padding: '0.7rem 0.85rem', borderRadius: '10px',
-                color: isActive(link.to) ? link.color : 'var(--text)',
-                background: isActive(link.to) ? `${link.color}12` : 'transparent',
-                fontSize: '0.9rem', fontWeight: 500, textDecoration: 'none',
-              }}>{link.emoji} {link.label}</Link>
-            ))}
-          </div>
-        </div>
-      )}
-
       <style>{`
-        @media (max-width: 768px) {
-          .sidebar { display: none !important; }
-          .mobile-topbar { display: flex !important; }
+        @keyframes slideUp {
+          from { transform: translateY(100%); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </>
